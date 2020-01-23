@@ -1,0 +1,52 @@
+h1{
+    color: rgb(4, 4, 82);
+}
+
+h2{
+
+    
+}
+
+h3{
+    font-weight: lighter;
+}
+
+body{
+    text-align: center;
+    background-color: rgb(178, 245, 223);
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    /* width: 60%;
+    margin-left: 20%; */
+    
+}
+
+.sideb1{
+    background-color: cadetblue;
+    grid-area: side1;
+    width: 10em;
+    height: 70em;
+    opacity: .5;
+    /* margin-left: 5%;
+    margin-right: 5%; */
+}
+
+.sideb2{
+    background-color: cadetblue;
+    width: 10em;
+    height: 70em;
+    grid-area: side2;
+    opacity: .5;
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-areas:
+      'side1 mainArea side2'
+      ;
+  }
+
+  .main{
+    grid-area: mainArea;
+  }
