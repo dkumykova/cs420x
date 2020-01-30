@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang='en'>
+  <head>
+    <style>
+    body{ 
+      margin:0 
+    }
+        /* .slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 25px;
+      background: #d3d3d3;
+      outline: none;
+      opacity: 0.7;
+      -webkit-transition: .2s;
+      transition: opacity .2s;
+    } */
+
+    /* .slider:hover {
+      opacity: 1;
+    }
+
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 25px;
+      height: 25px;
+      background: #4CAF50;
+      cursor: pointer;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 25px;
+      height: 25px;
+      background: #4CAF50;
+      cursor: pointer;
+    } */
+    
+    </style>
+  </head>
+  <body>
+    <canvas id='gl'></canvas>
+    <div class="controls">
+      <h1>Control your stuff here</h1>
+      <div class="slidecontainer">
+        <p>Vertical Lines</p>
+        <input type="range" min="0" max="1" value=".1" id="verticalSlide">
+        <p>Horizontal Lines</p>
+        <input type="range" min="0" max="1" value=".1" id="horizontalSlide">
+        <p>Brightness</p>
+        <input type="range" min="0" max="1" value=".1" id="alphaSlide">
+      </div>
+    </div>
+  </body>
+  <!-- vertex shader, as simple as possible -->
+  <script id='vertex' type='x-shader/x-vertex'>
+    attribute vec2 a_position;
+
+    void main() {
+      gl_Position = vec4( a_position, 0., 1. );
+    }
+  </script>
+
+  <!-- fragment shader -->
+  <script id='fragment' type='x-shader/x-fragment'>
+    #ifdef GL_ES
+    precision mediump float;
+    #endif
+    
+    uniform mediump float time;
+    uniform mediump vec2 resolution;
+    uniform mediump float xamount;
+    uniform mediump float yamount;
+    uniform mediump float alpha;
+
+    float rand(vec2 co){
+      return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+    }
+
+    float noise(){
+      vec2 p = gl_FragCoord.xy / resolution;
+      float i = floor(p.x);  
+      float f = fract(p.x);  
+      float y = rand(vec2(i));
+
+      y = mix(rand(vec2(i)), rand(vec2(i + 1.0)), f);
+      y = mix(rand(vec2(i)), rand(vec2(i + 1.0)), smoothstep(0.,1.,f));
+
+      return y;
+    }
+
+    void main() {
+
+      vec2 p = gl_FragCoord.xy / resolution;
+      float color = 0.; 
+      float frequency = 2.;
+      float gain = 1.;
+      float thickness = .01;
+
+      
+      float r = noise();
+      float r = mrandom(p/sin(time)); //for noise
+       
+      p.x+= time/50.;
+      p.y+= time/50.;
+      float colorband = mod(((p.x+50./time)), xamount);    
+      float colorband2 = mod(((p.y+50./time)), yamount); 
+      float colorband = mod(sin((p.x*5.)), r);  //perlin noise   
+
+      gl_FragColor = vec4(colorband2, colorband, r, alpha);
+
+      
+    }
+  </script>
+
+
+  <script type='text/javascript'>
+    // "global" variables
+    let gl, uTime, xc, yc, ualpha
+
+    window.onload = function() {
+      const canvas = document.getElementById( 'gl' )
+      gl = canvas.getContext( 'webgl' )
+      canvas.width = window.innerWidth * .8
+      canvas.height = window.innerHeight *.8
+
+      // define drawing area of canvas. bottom corner, width / height
+      gl.viewport( 0,0,gl.drawingBufferWidth, gl.drawingBufferHeight )
+
+      // create a buffer object to store vertices
+      const buffer = gl.createBuffer()
+
+      // point buffer at graphic context's ARRAY_BUFFER
+      gl.bindBuffer( gl.ARRAY_BUFFER, buffer )
+
+      const triangles = new Float32Array([
+        -1, -1,
+        1,  -1,
+        -1, 1,
+        -1, 1,
+        1, -1,
+        1, 1
+      ])
+
+      // initialize memory for buffer and populate it. Give
+      // open gl hint contents will not change dynamically.
+      gl.bufferData( gl.ARRAY_BUFFER, triangles, gl.STATIC_DRAW )
+
+      // create vertex shader
+      let shaderScript = document.getElementById('vertex')
+      let shaderSource = shaderScript.text
+      const vertexShader = gl.createShader( gl.VERTEX_SHADER )
+      gl.shaderSource( vertexShader, shaderSource );
+      gl.compileShader( vertexShader )
+
+      // create fragment shader
+      shaderScript = document.getElementById('fragment')
+      shaderSource = shaderScript.text
+      const fragmentShader = gl.createShader( gl.FRAGMENT_SHADER )
+      gl.shaderSource( fragmentShader, shaderSource );
+      gl.compileShader( fragmentShader )
+
+      // create shader program
+      const program = gl.createProgram()
+      gl.attachShader( program, vertexShader )
+      gl.attachShader( program, fragmentShader )
+      gl.linkProgram( program )
+      gl.useProgram( program )
+
+      
+
+      
+      /* ALL ATTRIBUTE/UNIFORM INITIALIZATION MUST COME AFTER 
+      CREATING/LINKING/USING THE SHADER PROGAM */
+      
+      // find a pointer to the uniform "time" in our fragment shader
+      uTime = gl.getUniformLocation( program, 'time' ) 
+      const uRes = gl.getUniformLocation( program, 'resolution' )
+      gl.uniform2f( uRes, window.innerWidth, window.innerHeight )
+
+      xc = gl.getUniformLocation( program, 'xamount' )
+      yc = gl.getUniformLocation( program, 'yamount' )
+      ualpha = gl.getUniformLocation( program, 'alpha' )
+      //gl.uniform1f(xc, .3);
+      //gl.uniform1f(yc, 1.);
+
+      // get position attribute location in shader
+      const position = gl.getAttribLocation( program, 'a_position' )
+      // enable the attribute
+      gl.enableVertexAttribArray( position )
+      // this will point to the vertices in the last bound array buffer.
+      // In this example, we only use one array buffer, where we're storing 
+      // our vertices
+      gl.vertexAttribPointer( position, 2, gl.FLOAT, false, 0,0 )
+      slideX();
+      slideY();
+      slideAlpha();
+      
+      console.log(gl.getShaderInfoLog(fragmentShader))
+      
+      render()
+    }
+
+    // keep track of time via incremental frame counter
+    let time = 0
+    function render() {
+      // schedules render to be called the next time the video card requests 
+      // a frame of video
+      window.requestAnimationFrame( render )
+      
+      // update time on CPU and GPU
+      time++
+      gl.uniform1f( uTime, time )
+
+      // draw triangles using the array buffer from index 0 to 6 (6 is count)
+      gl.drawArrays( gl.TRIANGLES, 0, 6 )
+    }
+
+    function slideX(){
+      console.log("slide x being called");
+        var slider = document.getElementById("verticalSlide");
+        console.log(slider);
+        // x = slider.value;
+        slider.step = ".1"; 
+
+        slider.oninput = function() {
+          console.log("x output" + xc);
+          gl.uniform1f(xc, this.value )
+          console.log("x output" + xc);
+        }  
+    }
+
+    
+    function slideY(){
+      console.log("slide y being called");
+        var slider = document.getElementById("horizontalSlide");
+        console.log(slider);
+        // x = slider.value;
+        slider.step = ".1"; 
+
+        slider.oninput = function() {
+          console.log("y output" + yc);
+          gl.uniform1f(yc, this.value )
+          console.log("y output" + yc);
+        }  
+    }
+
+    function slideAlpha(){
+      console.log("slide a being called");
+        var slider = document.getElementById("alphaSlide");
+        console.log(slider);
+        // x = slider.value;
+        slider.step = ".1"; 
+
+        slider.oninput = function() {
+          console.log("alpha output" + ualpha);
+          gl.uniform1f(ualpha, this.value )
+          console.log("alpha output" + ualpha);
+        }  
+    }
+
+  </script>
+
+</html>
