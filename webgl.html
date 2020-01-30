@@ -1,54 +1,85 @@
 <!doctype html>
+
 <html lang='en'>
   <head>
     <style>
     body{ 
       margin:0 
     }
-        /* .slider {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 25px;
-      background: #d3d3d3;
-      outline: none;
-      opacity: 0.7;
-      -webkit-transition: .2s;
-      transition: opacity .2s;
-    } */
-
-    /* .slider:hover {
-      opacity: 1;
+    .grid-container {
+    display: grid;
+    grid-template-areas:
+    'vert horiz bright'
+    'Noise PY PX'
+    'Sat colorc colorcc'
+    ;
+    z-index: 1;
     }
+    
+    .vertical{grid-area: vert;}
+    .horizontal{grid-area: horiz;}
+    .brightness{grid-area: bright;}
+    .py{grid-area: PY;}
+    .px{grid-area: PX;}
+    .noise{grid-area: Noise}
+    .color{grid-area: Sat;}
+    .color1{grid-area: colorc;}
+    .color2{grid-area: colorcc;}
+    .extra{grid-area: extra;}
 
-    .slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 25px;
-      height: 25px;
-      background: #4CAF50;
-      cursor: pointer;
-    }
-
-    .slider::-moz-range-thumb {
-      width: 25px;
-      height: 25px;
-      background: #4CAF50;
-      cursor: pointer;
-    } */
     
     </style>
+    <meta charset=utf-8>
+    <meta name=viewport content="width=device-width,initial-scale=1">
   </head>
   <body>
     <canvas id='gl'></canvas>
+    <!-- <div class="audio">
+      <audio src="http://23.237.126.42/ost/shingeki-no-kyojin-attack-on-titan-original-soundtrack/ywpysdsy/16%20omake-pfadlib.mp3" type="audio/mpeg"></audio>
+      <button data-playing="false" role="switch" aria-checked="false">
+        <span>Play/Pause</span>
+    </button>
+    </div> -->
     <div class="controls">
-      <h1>Control your stuff here</h1>
-      <div class="slidecontainer">
-        <p>Vertical Lines</p>
-        <input type="range" min="0" max="1" value=".1" id="verticalSlide">
+      <h1 style="margin-top:0%; margin-bottom: 0%;">Control your stuff here</h1>
+      <div class="grid-container">
+        <div class="vertical">
+          <p>Vertical Lines</p>
+          <input type="range" min="0" max="1" value=".1" id="verticalSlide">
+        </div>
+        <div class="horizontal">
         <p>Horizontal Lines</p>
         <input type="range" min="0" max="1" value=".1" id="horizontalSlide">
+      </div>
+      <div class="brightness">
         <p>Brightness</p>
         <input type="range" min="0" max="1" value=".1" id="alphaSlide">
+      </div>
+      <div class="noise">
+        <p>Noise?</p>
+        <input onclick="perlinCheck()" type="checkbox" name="perlin" value="Noise" id="perlinCheck">
+      </div>
+      <div class="color">
+        <p>Color or Pattern</p>
+        <input type="range" min="0" max="1" value=".1" id="perlinDense">
+      </div>
+      <div class="py">
+        <p>PY</p>
+        <input type="range" min="50" max="1000" value="50" id="pySlide">
+      </div>
+      <div class="px">
+        <p>PX</p>
+        <input type="range" min="50" max="1000" value="50" id="pxSlide">
+      </div>
+      <div class="color1">
+        <p>Color 1</p>
+        <input type="range" min="0" max="1" value="0" id="color1Slide">
+      </div>
+      <div class="color2">
+        <p>Color2</p>
+        <input type="range" min="0" max="1" value="0" id="color2Slide">
+      </div>
+      <div class="extra"></div>
       </div>
     </div>
   </body>
@@ -72,6 +103,12 @@
     uniform mediump float xamount;
     uniform mediump float yamount;
     uniform mediump float alpha;
+    uniform mediump int perlin;
+    uniform mediump float perlinDivide;
+    uniform mediump float pySpeed;
+    uniform mediump float pxSpeed;
+    uniform mediump float color1
+    uniform mediump float color2;;
 
     float rand(vec2 co){
       return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -83,7 +120,7 @@
       float f = fract(p.x);  
       float y = rand(vec2(i));
 
-      y = mix(rand(vec2(i)), rand(vec2(i + 1.0)), f);
+      
       y = mix(rand(vec2(i)), rand(vec2(i + 1.0)), smoothstep(0.,1.,f));
 
       return y;
@@ -97,17 +134,23 @@
       float gain = 1.;
       float thickness = .01;
 
-      
-      float r = noise();
-      float r = mrandom(p/sin(time)); //for noise
+      float r = 0.;
+      float colorband = 0.;
        
-      p.x+= time/50.;
-      p.y+= time/50.;
-      float colorband = mod(((p.x+50./time)), xamount);    
-      float colorband2 = mod(((p.y+50./time)), yamount); 
-      float colorband = mod(sin((p.x*5.)), r);  //perlin noise   
+      p.x+= time/pxSpeed;
+      p.y+= time/pySpeed;
+      if(perlin == 1){
+        colorband = mod(sin((p.x*5.)), xamount);  
+        r = rand(p/sin(1.)*time/perlinDivide); 
+      } else {
+        colorband = mod(((p.x+50./time)), xamount);
+        r = perlinDivide;
+      }
 
-      gl_FragColor = vec4(colorband2, colorband, r, alpha);
+      float colorband2 = mod(((p.y+50./time)), yamount); 
+        
+
+      gl_FragColor = vec4(color1 -colorband2, color2-colorband, r, alpha);
 
       
     }
@@ -116,13 +159,13 @@
 
   <script type='text/javascript'>
     // "global" variables
-    let gl, uTime, xc, yc, ualpha
+    let gl, uTime, xc, yc, ualpha, uperlin, udense, pys, pxs, c, cc
 
     window.onload = function() {
       const canvas = document.getElementById( 'gl' )
       gl = canvas.getContext( 'webgl' )
-      canvas.width = window.innerWidth * .8
-      canvas.height = window.innerHeight *.8
+      canvas.width = window.innerWidth 
+      canvas.height = window.innerHeight * .7
 
       // define drawing area of canvas. bottom corner, width / height
       gl.viewport( 0,0,gl.drawingBufferWidth, gl.drawingBufferHeight )
@@ -181,6 +224,12 @@
       xc = gl.getUniformLocation( program, 'xamount' )
       yc = gl.getUniformLocation( program, 'yamount' )
       ualpha = gl.getUniformLocation( program, 'alpha' )
+      uperlin = gl.getUniformLocation( program, 'perlin' )
+      udense = gl.getUniformLocation( program, 'perlinDivide' )
+      pys = gl.getUniformLocation( program, 'pySpeed' )
+      pxs = gl.getUniformLocation( program, 'pxSpeed' )
+      c = gl.getUniformLocation( program, 'color1' )
+      cc = gl.getUniformLocation( program, 'color2' )
       //gl.uniform1f(xc, .3);
       //gl.uniform1f(yc, 1.);
 
@@ -195,6 +244,12 @@
       slideX();
       slideY();
       slideAlpha();
+      slidePerlin();
+      slidePY();
+      slidePX();
+      slideColor1();
+      slideColor2();
+
       
       console.log(gl.getShaderInfoLog(fragmentShader))
       
@@ -230,7 +285,34 @@
         }  
     }
 
-    
+    function slideColor1(){
+      console.log("slide y being called");
+        var slider = document.getElementById("color1Slide");
+        console.log(slider);
+        // x = slider.value;
+        slider.step = ".1"; 
+
+        slider.oninput = function() {
+          console.log("y output" + c);
+          gl.uniform1f(c, this.value )
+          console.log("y output" + c);
+        }  
+    }
+
+    function slideColor2(){
+      console.log("slide y being called");
+        var slider = document.getElementById("color2Slide");
+        console.log(slider);
+        // x = slider.value;
+        slider.step = ".1"; 
+
+        slider.oninput = function() {
+          console.log("y output" + cc);
+          gl.uniform1f(cc, this.value )
+          console.log("y output" + cc);
+        }  
+    }
+
     function slideY(){
       console.log("slide y being called");
         var slider = document.getElementById("horizontalSlide");
@@ -258,6 +340,107 @@
           console.log("alpha output" + ualpha);
         }  
     }
+
+    function slidePerlin(){
+      console.log("slide a being called");
+        var slider = document.getElementById("perlinDense");
+        console.log(slider);
+        // x = slider.value;
+        slider.step = ".1"; 
+
+        slider.oninput = function() {
+          console.log("alpha output" + udense);
+          gl.uniform1f(udense, this.value )
+          console.log("alpha output" + udense);
+        }  
+    }
+
+    function perlinCheck(){
+      var p = document.getElementById('perlinCheck');
+
+      if(p.checked){
+        
+        gl.uniform1i(uperlin, 1);
+        console.log("perlin is chekced! " + uperlin);
+      } else {
+        
+        gl.uniform1i(uperlin, 0);
+        console.log("perlin is unchekced! " + uperlin);
+      }
+    }
+
+    function slidePY(){
+      console.log("slide a being called");
+        var slider = document.getElementById("pySlide");
+        console.log(slider);
+        // x = slider.value;
+        slider.step = "50"; 
+
+        slider.oninput = function() {
+          console.log("alpha output" + pys);
+          gl.uniform1f(pys, this.value )
+          console.log("alpha output" + pys);
+        }  
+    }
+
+    function slidePX(){
+      console.log("slide a being called");
+        var slider = document.getElementById("pxSlide");
+        console.log(slider);
+        // x = slider.value;
+        slider.step = "50"; 
+
+        slider.oninput = function() {
+          console.log("alpha output" + pxs);
+          gl.uniform1f(pxs, this.value )
+          console.log("alpha output" + pxs);
+        }  
+    }
+
+  function audio(){
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+
+    const audioContext = new AudioContext();
+
+    // get the audio element
+    const audioElement = document.querySelector('audio');
+
+    // pass it into the audio context
+    const track = audioContext.createMediaElementSource(audioElement);
+    track.connect(audioContext.destination);
+
+    const xhr = new XMLHttpRequest();
+    const url = 'https://bar.other/resources/public-data/';
+      
+    xhr.open('GET', url);
+    xhr.onreadystatechange = someHandler;
+    xhr.send();
+
+    // select our play button
+    const playButton = document.querySelector('button');
+
+    playButton.addEventListener('click', function() {
+
+    // check if context is in suspended state (autoplay policy)
+    if (audioContext.state === 'suspended') {
+        audioContext.resume();
+    }
+
+    // play or pause track depending on state
+    if (this.dataset.playing === 'false') {
+        audioElement.play();
+        this.dataset.playing = 'true';
+    } else if (this.dataset.playing === 'true') {
+        audioElement.pause();
+        this.dataset.playing = 'false';
+    }
+
+    }, false);
+
+    audioElement.addEventListener('ended', () => {
+    playButton.dataset.playing = 'false';
+    }, false);
+  }
 
   </script>
 
