@@ -50,3 +50,30 @@ body{
   .main{
     grid-area: mainArea;
   }
+
+  .hr {
+    
+    width: 100%;
+    height: 1px;
+    display: block;
+    position: relative;
+    margin-bottom: 0em;
+    padding: 2em 0;
+
+ 
+  }
+    .hr::before {
+
+        content: "";
+        position: absolute;
+
+        width: 100%;
+        height: 1px;
+        bottom: 50%;
+        left: 0;
+        background: linear-gradient( 90deg, #10111F 0%, #10111F 50%, transparent 50%, transparent 100% );
+        background-size: 15px;
+        background-position: center;
+        z-index: 1;
+
+    }
