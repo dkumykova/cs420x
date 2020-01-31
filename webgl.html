@@ -9,9 +9,9 @@
     .grid-container {
     display: grid;
     grid-template-areas:
-    'vert horiz bright'
-    'Noise PY PX'
-    'Sat colorc colorcc'
+    'vert horiz bright Noise'
+    'colorcc  colorc PY PX'
+    'x y extra extra'
     ;
     z-index: 1;
     }
@@ -22,10 +22,64 @@
     .py{grid-area: PY;}
     .px{grid-area: PX;}
     .noise{grid-area: Noise}
-    .color{grid-area: Sat;}
+    /* .color{grid-area: Sat;} */
     .color1{grid-area: colorc;}
     .color2{grid-area: colorcc;}
     .extra{grid-area: extra;}
+    .xdir{grid-area: x}
+    .ydir{grid-area: y}
+
+        .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 34px;
+    }
+
+    .switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 26px;
+      width: 26px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      -webkit-transition: .4s;
+      transition: .4s;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+      -webkit-transform: translateX(26px);
+      -ms-transform: translateX(26px);
+      transform: translateX(26px);
+    }
+
 
     
     </style>
@@ -56,27 +110,42 @@
         <input type="range" min="0" max="1" value=".1" id="alphaSlide">
       </div>
       <div class="noise">
-        <p>Noise?</p>
-        <input onclick="perlinCheck()" type="checkbox" name="perlin" value="Noise" id="perlinCheck">
+        <p>Multiply</p>
+        <input onclick="perlinCheck()" type="checkbox" name="perlin" value="Noise" id="perlinCheck"> 
       </div>
-      <div class="color">
+      <div class="xdir">
+        <p>Flip X Direction</p>
+        <label class="switch">
+          <input onclick="xDir()" type="checkbox" name="xdir" value="xDirection" id="xCheck" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="ydir">
+        <p>Flip Y Direction</p>
+        <label class="switch">
+          <input onclick="yDir()" type="checkbox" name="ydir" value="yDirection" id="yCheck" checked>
+          <span class="slider"></span>
+        </label>
+        
+      </div>
+      <!-- <div class="color">
         <p>Color or Pattern</p>
         <input type="range" min="0" max="1" value=".1" id="perlinDense">
-      </div>
+      </div> -->
       <div class="py">
-        <p>PY</p>
-        <input type="range" min="50" max="1000" value="50" id="pySlide">
+        <p>Vertical Speed</p>
+        <input type="range" min="50" max="500" value="50" id="pySlide">
       </div>
       <div class="px">
-        <p>PX</p>
-        <input type="range" min="50" max="1000" value="50" id="pxSlide">
+        <p>Horizontal Speed</p>
+        <input type="range" min="50" max="500" value="50" id="pxSlide">
       </div>
       <div class="color1">
-        <p>Color 1</p>
+        <p>Vertical Gradient</p>
         <input type="range" min="0" max="1" value="0" id="color1Slide">
       </div>
       <div class="color2">
-        <p>Color2</p>
+        <p>Horizontal Gradient</p>
         <input type="range" min="0" max="1" value="0" id="color2Slide">
       </div>
       <div class="extra"></div>
@@ -104,11 +173,12 @@
     uniform mediump float yamount;
     uniform mediump float alpha;
     uniform mediump int perlin;
-    uniform mediump float perlinDivide;
     uniform mediump float pySpeed;
     uniform mediump float pxSpeed;
-    uniform mediump float color1
-    uniform mediump float color2;;
+    uniform mediump float color1;
+    uniform mediump float color2;
+    uniform mediump float flipY;
+    uniform mediump float flipX;
 
     float rand(vec2 co){
       return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -137,20 +207,20 @@
       float r = 0.;
       float colorband = 0.;
        
-      p.x+= time/pxSpeed;
-      p.y+= time/pySpeed;
+      p.x+= flipX*time/pxSpeed;
+      p.y+= flipY*time/pySpeed;
       if(perlin == 1){
-        colorband = mod(sin((p.x*5.)), xamount);  
-        r = rand(p/sin(1.)*time/perlinDivide); 
+        colorband = mod(sin(((p.x)*5.)), xamount);  
+        r = rand(p/10.*time); 
       } else {
         colorband = mod(((p.x+50./time)), xamount);
-        r = perlinDivide;
+        r = noise();
       }
 
       float colorband2 = mod(((p.y+50./time)), yamount); 
         
 
-      gl_FragColor = vec4(color1 -colorband2, color2-colorband, r, alpha);
+      gl_FragColor = vec4(color1-colorband2, color2-colorband, r, alpha);
 
       
     }
@@ -159,7 +229,7 @@
 
   <script type='text/javascript'>
     // "global" variables
-    let gl, uTime, xc, yc, ualpha, uperlin, udense, pys, pxs, c, cc
+    let gl, uTime, xc, yc, ualpha, uperlin, pys, pxs, c, cc, fy, fx
 
     window.onload = function() {
       const canvas = document.getElementById( 'gl' )
@@ -225,13 +295,32 @@
       yc = gl.getUniformLocation( program, 'yamount' )
       ualpha = gl.getUniformLocation( program, 'alpha' )
       uperlin = gl.getUniformLocation( program, 'perlin' )
-      udense = gl.getUniformLocation( program, 'perlinDivide' )
+      // udense = gl.getUniformLocation( program, 'perlinDivide' )
       pys = gl.getUniformLocation( program, 'pySpeed' )
       pxs = gl.getUniformLocation( program, 'pxSpeed' )
       c = gl.getUniformLocation( program, 'color1' )
       cc = gl.getUniformLocation( program, 'color2' )
+      fx = gl.getUniformLocation( program, 'flipX' )
+      fy = gl.getUniformLocation( program, 'flipY' )
       //gl.uniform1f(xc, .3);
       //gl.uniform1f(yc, 1.);
+      //default values
+      // gl.uniform1f(xc, 0.5 )
+      // gl.uniform1f(yc, 0.5 )
+      // gl.uniform1f(ualpha, 1 )
+      // gl.uniform1f(uperlin, 0.5 )
+      // gl.uniform1f(pys, 50 )
+      // gl.uniform1f(pxs, 50 )
+      // gl.uniform1f(c, .5 )
+      // gl.uniform1f(cc, .5 )
+      // gl.uniform1f(fx, -1 )
+      // gl.uniform1f(fy, -1 )
+      var xCheck = document.getElementById('xCheck');
+      var yCheck = document.getElementById('yCheck');
+      var perlinCheck = document.getElementById('perlinCheck');
+      xCheck.checked = false;
+      yCheck.checked = false;
+      perlinCheck.checked = false;
 
       // get position attribute location in shader
       const position = gl.getAttribLocation( program, 'a_position' )
@@ -244,11 +333,12 @@
       slideX();
       slideY();
       slideAlpha();
-      slidePerlin();
+      //slidePerlin();
       slidePY();
       slidePX();
       slideColor1();
       slideColor2();
+      
 
       
       console.log(gl.getShaderInfoLog(fragmentShader))
@@ -341,19 +431,19 @@
         }  
     }
 
-    function slidePerlin(){
-      console.log("slide a being called");
-        var slider = document.getElementById("perlinDense");
-        console.log(slider);
-        // x = slider.value;
-        slider.step = ".1"; 
+    // function slidePerlin(){
+    //   console.log("slide a being called");
+    //     var slider = document.getElementById("perlinDense");
+    //     console.log(slider);
+    //     // x = slider.value;
+    //     slider.step = ".1"; 
 
-        slider.oninput = function() {
-          console.log("alpha output" + udense);
-          gl.uniform1f(udense, this.value )
-          console.log("alpha output" + udense);
-        }  
-    }
+    //     slider.oninput = function() {
+    //       console.log("alpha output" + udense);
+    //       gl.uniform1f(udense, this.value )
+    //       console.log("alpha output" + udense);
+    //     }  
+    // }
 
     function perlinCheck(){
       var p = document.getElementById('perlinCheck');
@@ -366,6 +456,33 @@
         
         gl.uniform1i(uperlin, 0);
         console.log("perlin is unchekced! " + uperlin);
+      }
+    }
+    function xDir(){
+      var p = document.getElementById('xCheck');
+
+      if(p.checked){
+        
+        gl.uniform1f(fx, 1.0);
+        console.log("perlin is chekced! " + fx);
+      } else {
+        
+        gl.uniform1f(fx, -1.0);
+        console.log("perlin is unchekced! " + fx);
+      }
+    }
+
+    function yDir(){
+      var p = document.getElementById('yCheck');
+
+      if(p.checked){
+        
+        gl.uniform1f(fy, 1.0);
+        console.log("perlin is chekced! " + fy);
+      } else {
+        
+        gl.uniform1f(fy, -1.0);
+        console.log("perlin is unchekced! " + fy);
       }
     }
 
