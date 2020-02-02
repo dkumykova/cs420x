@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>body{ margin:0; background:black }</style>
-    <script type="text/javascript" src="dat.gui.js"></script> 
-    <link rel = "stylesheet" type = "text/css" href = "build/dat.gui.css" />
+    <script type="text/javascript" src="build/dat.gui.min.js"></script> 
+   
   </head>
   <body>
     <canvas id='gl'></canvas>
@@ -71,12 +71,12 @@
     }
     void main() {
       vec2 pos = gl_FragCoord.xy / resolution;
-      vec3 video = mod(texture2D( videoTexture, pos +cnoise(pos*time/10.)).rgb, .9);
+      vec3 video = mod(texture2D( videoTexture, pos +cnoise(pos*time/feedbackAmount)).rgb, .9);
       vec3 prior = texture2D( feedbackTexture, pos ).rgb;
       
       // our final output is a combination of the live video signal
       // and our feedback
-      gl_FragColor = vec4( (video * .125 + prior * feedbackAmount), 1. );
+      gl_FragColor = vec4( (video * .125 + prior * .925), 1. );
     }
   </script>
 
@@ -96,30 +96,9 @@
   </script>
 
   
-  <script type="text/javascript">
-        
-    window.onload = function() {
-
-        var FizzyText = function() {
-            this.message = 'dat.gui';
-            this.speed = 0.8;
-            this.displayOutline = false;
-            this.explode = function() { };
-            // Define render logic ...
-        };
-
-        var text = new FizzyText();
-        var gui = new dat.GUI();
-        gui.add(text, 'message');
-        gui.add(text, 'speed', -5, 5);
-        gui.add(text, 'displayOutline');
-        gui.add(text, 'explode');
-    }
-        
-    </script>
   <script type='text/javascript'>
     // kinda global variables... upvalues to each closure of each function in this script tag
-    let gl, uTime, uRes, drawProgram, videoTexture
+    let gl, uTime, uRes, drawProgram, videoTexture, ui, controls
     
 
     const size = 768
@@ -217,9 +196,9 @@
 
         uRes = gl.getUniformLocation( feedbackProgram, 'resolution' )
         gl.uniform2f( uRes, gl.drawingBufferWidth, gl.drawingBufferHeight )
-
+        
         uFeedback = gl.getUniformLocation( feedbackProgram, 'feedbackAmount' )
-        gl.uniform1f( uFeedback, .7 )
+        
 
         // find a pointer to the uniform "time" in our fragment shader
         uTime = gl.getUniformLocation( feedbackProgram, 'time' )
@@ -233,6 +212,20 @@
         position = gl.getAttribLocation( feedbackProgram, 'a_position' )
         gl.enableVertexAttribArray( feedbackProgram )
         gl.vertexAttribPointer( position, 2, gl.FLOAT, false, 0,0 )
+
+        controls = function() {
+             this.feedback = 10;
+             // Define render logic ...
+        };
+
+        ui = new controls();
+        var gui = new dat.GUI();
+        gui.add(ui, 'feedback', 0, 100);
+
+        gl.uniform1f( uFeedback, ui.feedback )
+        // gui.add(text, 'speed', -5, 5);
+        // gui.add(text, 'displayOutline');
+        // gui.add(text, 'explode');
       
       video = getVideo()
     }
@@ -325,31 +318,34 @@
             video             // pixel source: could also be video or image
     )
 
-    // in our shaders, read from texBack, which is where we poked to
-    gl.activeTexture( gl.TEXTURE1 )
-    gl.bindTexture( gl.TEXTURE_2D, textureBack )
-    gl.uniform1i( uFeedbackTexture, 1 )
-    // run shader
-    gl.drawArrays( gl.TRIANGLES, 0, 6 )
+        // in our shaders, read from texBack, which is where we poked to
+        gl.activeTexture( gl.TEXTURE1 )
+        gl.bindTexture( gl.TEXTURE_2D, textureBack )
+        gl.uniform1i( uFeedbackTexture, 1 )
+        gl.uniform1f( uFeedback, ui.feedback)
+        // run shader
+        gl.drawArrays( gl.TRIANGLES, 0, 6 )
 
-    // swap our front and back textures
-    let tmp = textureFront
-    textureFront = textureBack
-    textureBack = tmp
+        // swap our front and back textures
+        let tmp = textureFront
+        textureFront = textureBack
+        textureBack = tmp
 
-    // use the default framebuffer object by passing null
-    gl.bindFramebuffer( gl.FRAMEBUFFER, null )
-    gl.viewport(0, 0, size, size )
-    // select the texture we would like to draw to the screen.
-    // note that webgl does not allow you to write to / read from the
-    // same texture in a single render pass. Because of the swap, we're
-    // displaying the state of our simulation ****before**** this render pass (frame)
-    gl.activeTexture( gl.TEXTURE0 )
-    gl.bindTexture( gl.TEXTURE_2D, textureFront )
-    // use our drawing (copy) shader
-    gl.useProgram( drawProgram )
-    // put simulation on screen
-    gl.drawArrays( gl.TRIANGLES, 0, 6 )
+        // use the default framebuffer object by passing null
+        gl.bindFramebuffer( gl.FRAMEBUFFER, null )
+        gl.viewport(0, 0, size, size )
+        // select the texture we would like to draw to the screen.
+        // note that webgl does not allow you to write to / read from the
+        // same texture in a single render pass. Because of the swap, we're
+        // displaying the state of our simulation ****before**** this render pass (frame)
+        gl.activeTexture( gl.TEXTURE0 )
+        gl.bindTexture( gl.TEXTURE_2D, textureFront )
+        // use our drawing (copy) shader
+        gl.useProgram( drawProgram )
+        // put simulation on screen
+        gl.drawArrays( gl.TRIANGLES, 0, 6 )
+
+        //uFeedback += ui.feedback;
     }
   </script>
 
