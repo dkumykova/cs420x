@@ -65,11 +65,11 @@
       </div>
       <div class="py">
         <p>PY</p>
-        <input type="range" min="50" max="1000" value="50" id="pySlide">
+        <input type="range" min="50" max="1050" value="50" id="pySlide">
       </div>
       <div class="px">
         <p>PX</p>
-        <input type="range" min="50" max="1000" value="50" id="pxSlide">
+        <input type="range" min="50" max="1050" value="50" id="pxSlide">
       </div>
       <div class="color1">
         <p>Color 1</p>
@@ -107,8 +107,8 @@
     uniform mediump float perlinDivide;
     uniform mediump float pySpeed;
     uniform mediump float pxSpeed;
-    uniform mediump float color1
-    uniform mediump float color2;;
+    uniform mediump float color1;
+    uniform mediump float color2;
 
     float rand(vec2 co){
       return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
@@ -374,7 +374,7 @@
         var slider = document.getElementById("pySlide");
         console.log(slider);
         // x = slider.value;
-        slider.step = "50"; 
+        slider.step = "100"; 
 
         slider.oninput = function() {
           console.log("alpha output" + pys);
@@ -388,7 +388,7 @@
         var slider = document.getElementById("pxSlide");
         console.log(slider);
         // x = slider.value;
-        slider.step = "50"; 
+        slider.step = "100"; 
 
         slider.oninput = function() {
           console.log("alpha output" + pxs);
