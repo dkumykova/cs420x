@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>body{ margin:0; background:black }</style>
+    <style>body{  background:black;height: 60% }</style>
     <script type="text/javascript" src="build/dat.gui.min.js"></script> 
    
   </head>
-  <body>
-    <canvas id='gl'></canvas>
+  <body >
+    <canvas id='gl' style="width: 80%; align-content: center;" ></canvas>
   </body>
   
   <!-- vertex shader, as simple as possible -->
@@ -27,12 +27,27 @@
   
     uniform float time;
     uniform float feedbackAmount;
+    uniform float perlinSize;
+    uniform float modulus;
+    uniform float thing;
+    uniform float color;
+    uniform float rotation;
     uniform vec2  resolution;
+    uniform float wave;
     
     // for our live video feed
     uniform sampler2D videoTexture;
     // get access to the last frame of video
     uniform sampler2D feedbackTexture;
+
+    vec3 hsb2rgb( in vec3 c ){
+      vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                               6.0)-3.0)-1.0,
+                       0.0,
+                       1.0 );
+      rgb = rgb*rgb*(3.0-2.0*rgb);
+      return c.z * mix( vec3(1.0), rgb, c.y);
+  }
   
     vec2 fade(vec2 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
     vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
@@ -70,13 +85,36 @@
     return 2.3 * n_xy;
     }
     void main() {
+
       vec2 pos = gl_FragCoord.xy / resolution;
-      vec3 video = mod(texture2D( videoTexture, pos +cnoise(pos*time/feedbackAmount)).rgb, .9);
-      vec3 prior = texture2D( feedbackTexture, pos ).rgb;
+
+      vec2 toCenter = vec2(0.5)-pos;
+      float angle = atan(toCenter.y,toCenter.x);
+      float radius = length(toCenter)*2.0;
+      vec3 testc = vec3(0.0);
+
+      // Map the angle (-PI to PI) to the Hue (from 0 to 1)
+      // and the Saturation to the radius
+      testc = hsb2rgb(vec3((angle/6.28)+0.5,radius,1.0));
+
+      float c;
+      if(wave == 1.0){
+        c = (testc.z*angle)* (testc.x*sin(time/10.*radius)*6.28318530718);
+      } else if (wave == 2.0){
+        c = (testc.z*angle)* (testc.x*cos(time*10.*radius)*6.28318530718);
+      } else if (wave == 3.0){
+        c = (testc.z*angle)* (testc.x*tan(time/10.*radius)*6.28318530718);
+      } else {
+        c = .2;//(testc.z*angle)* (testc.x*angle);
+      }
+
+      
+      vec3 video = mod(texture2D( videoTexture, pos + cnoise(pos*thing/perlinSize) + sin(time/10.*radius)).rgb, modulus);
+      vec3 prior = texture2D( feedbackTexture, pos ).rgb ;
       
       // our final output is a combination of the live video signal
       // and our feedback
-      gl_FragColor = vec4( (video * .125 + prior * .925), 1. );
+      gl_FragColor = vec4( vec2(video * radius + prior * .925), c, 1. );
     }
   </script>
 
@@ -197,7 +235,12 @@
         uRes = gl.getUniformLocation( feedbackProgram, 'resolution' )
         gl.uniform2f( uRes, gl.drawingBufferWidth, gl.drawingBufferHeight )
         
-        uFeedback = gl.getUniformLocation( feedbackProgram, 'feedbackAmount' )
+        perlinSz = gl.getUniformLocation( feedbackProgram, 'perlinSize' )
+        shading = gl.getUniformLocation( feedbackProgram, 'modulus' )
+        thingy = gl.getUniformLocation( feedbackProgram, 'thing' )
+        //col = gl.getUniformLocation( feedbackProgram, 'color' )
+        //rot = gl.getUniformLocation( feedbackProgram, 'rotation' )
+        wv = gl.getUniformLocation( feedbackProgram, 'wave' )
         
 
         // find a pointer to the uniform "time" in our fragment shader
@@ -214,15 +257,30 @@
         gl.vertexAttribPointer( position, 2, gl.FLOAT, false, 0,0 )
 
         controls = function() {
-             this.feedback = 10;
+             this.density = 10;
+             this.shading = .9;
+             this.distortion = 10;
+             //this.coll = .5;
+             //this.rotation = .5;
+             this.waveType = 'none';
              // Define render logic ...
         };
 
         ui = new controls();
         var gui = new dat.GUI();
-        gui.add(ui, 'feedback', 0, 100);
+        gui.add(ui, 'density', -100, 100);
+        gui.add(ui, 'shading', 0, 1);
+        gui.add(ui, 'distortion', 0, 300);
+        //gui.add(ui, 'coll', 0, 1);
+        //gui.add(ui, 'rotation', -1, 1);
+        //gui.add(ui, 'waveType', [ 1.0, 2.0, 3.0, 0.0]);
+         gui.add(ui, 'waveType', [ 'sin', 'cos', 'tan', 'none'] );
 
-        gl.uniform1f( uFeedback, ui.feedback )
+
+        // gl.uniform1f( perlinSz, ui.density )
+        // gl.uniform1f( modul, ui.mod )
+        // gl.uniform1f( col, ui.coll )
+        // gl.uniform1f( rot, ui.rotation )
         // gui.add(text, 'speed', -5, 5);
         // gui.add(text, 'displayOutline');
         // gui.add(text, 'explode');
@@ -322,7 +380,22 @@
         gl.activeTexture( gl.TEXTURE1 )
         gl.bindTexture( gl.TEXTURE_2D, textureBack )
         gl.uniform1i( uFeedbackTexture, 1 )
-        gl.uniform1f( uFeedback, ui.feedback)
+        gl.uniform1f( perlinSz, ui.density)
+        gl.uniform1f( shading, ui.shading)
+        gl.uniform1f( thingy, ui.distortion)
+        //gl.uniform1f( wv, ui.waveType)
+        //gl.uniform1f( col, ui.coll)
+        //gl.uniform1f( rot, ui.rotation)
+
+         if(ui.waveType == 'sin'){
+           gl.uniform1f( wv, 1.0)
+         } else if (ui.waveType == 'cos'){
+           gl.uniform1f( wv, 2.0)
+         } else if (ui.waveType == 'tan'){
+           gl.uniform1f( wv, 3.0)
+         } else {
+           gl.uniform1f( wv, 4.0)
+         }
         // run shader
         gl.drawArrays( gl.TRIANGLES, 0, 6 )
 
