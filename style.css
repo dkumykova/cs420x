@@ -35,7 +35,7 @@ body{
     background-color: cadetblue;
     grid-area: side1;
     width: 10em;
-    height: 160em;
+    height: 250em;
     opacity: .5;
     /* margin-left: 5%;
     margin-right: 5%; */
@@ -44,7 +44,7 @@ body{
 .sideb2{
     background-color: cadetblue;
     width: 10em;
-    height: 160em;
+    height: 250em;
     grid-area: side2;
     opacity: .5;
     margin-left: 5%;
