@@ -10,6 +10,7 @@
       width:100%; height:100%; position:relative; 
     } 
   </style> 
+  <script type="text/javascript" src="build/dat.gui.min.js"></script> 
 </head>
 
 <body>
@@ -38,8 +39,15 @@
     precision mediump float;
     uniform sampler2D state; 
     uniform vec2 scale;
+    uniform vec2 resolution;
+    uniform float dA;
+    uniform float dB;
+    uniform float k;
+    uniform float f;
+
     //float f=.0545, k=.062, dA = 1., dB = 0.; // coral preset 
-    float f = .0457, k = .0635, dA = 1., dB = .5;
+    //float f = .0457, k = .0635;
+    //dA = 1., dB = .5;
     
     vec2 get(int x, int y) { 
       return texture2D( state, ( gl_FragCoord.xy + vec2(x, y) ) / scale ).rg; 
@@ -83,11 +91,26 @@
       return state; 
     } 
     void main() { 
+
+    vec2 pos = gl_FragCoord.xy / resolution;
+
+      vec2 toCenter = vec2(0.5)-pos;
+
       vec2 nextState = run(); 
       gl_FragColor = vec4( nextState.r, nextState.g, 0., 1. ); 
     } 
   </script>
 <script>
+    const size = 768
+    controls = function() {
+             this.dA = 1;
+             this.dB = .5;
+             this.k = .0635;
+             this.f = .0457;
+             this.reload = function(){location.reload();};//alert('check check');//simReload();
+
+
+        };
     window.onload = function() { 
     let canvas = document.querySelector( 'canvas' ) 
     canvas.width = window.innerWidth
@@ -144,6 +167,8 @@
     gl.shaderSource( fragmentShaderDraw, shaderSource )
     gl.compileShader( fragmentShaderDraw ) 
     console.log( gl.getShaderInfoLog( fragmentShaderDraw ) ) 
+
+    
       
     // create shader program
     programDraw = gl.createProgram() 
@@ -157,6 +182,14 @@
     const position2 = gl.getAttribLocation( programDraw, 'a_position' ) 
     gl.enableVertexAttribArray( position2 )
     gl.vertexAttribPointer( position2, 2, gl.FLOAT, false, 0,0 )
+
+ 
+     DA = gl.getUniformLocation( programRender, 'dA' )
+     DB = gl.getUniformLocation( programRender, 'dB' )
+     kk = gl.getUniformLocation( programRender, 'k' )
+     ff = gl.getUniformLocation( programRender, 'f' )
+    
+        
 
     // enable floating point textures in the browser
     gl.getExtension('OES_texture_float'); 
@@ -205,6 +238,23 @@
 
     const fb = gl.createFramebuffer() 
     const fb2 = gl.createFramebuffer() 
+
+
+    
+        //float f = .0457, k = .0635, dA = 1., dB = .5;
+
+        ui = new controls();
+        var gui = new dat.GUI();
+        gui.add(ui, 'dA', 0, 1);
+        gui.add(ui, 'dB', 0, 1);
+        gui.add(ui, 'k', 0, 1);
+        gui.add(ui, 'f', 0, 1);
+        gui.add(ui, 'reload');
+
+        
+    //     gl.uniform1f( DB, ui.dB)
+    //     gl.uniform1f( kk, ui.k)
+    //     gl.uniform1f( ff, ui.f)
   
     const pingpong = function() {
       gl.bindFramebuffer( gl.FRAMEBUFFER, fb ) 
@@ -216,7 +266,12 @@
       // in our shaders, read from texBack, which is where we poked to 
       gl.bindTexture( gl.TEXTURE_2D, texBack ) // run shader 
       gl.drawArrays( gl.TRIANGLES, 0, 6 ) 
-    
+
+      gl.uniform1f( DA, ui.dA)
+      gl.uniform1f( DB, ui.dB)
+      gl.uniform1f( kk, ui.k)
+      gl.uniform1f( ff, ui.f)
+
       gl.bindFramebuffer( gl.FRAMEBUFFER, fb2 )
       gl.framebufferTexture2D( gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texBack, 0 ) 
       // set our viewport to be the size of our canvas 
@@ -250,8 +305,21 @@
         
       window.requestAnimationFrame( draw ) 
     }
+
+    // get pointer to uniform in shader
+    //let f = gl.getUniformLocation( programRender, ‘f’ )
+    // send value from CPU to GPU pointer location
+    //gl.uniform1f( f, .0457 )
+
+    
+
+        
      
     draw()
+}
+
+function simReload(){
+    //this.location.reload();
 }
 
 </script>
