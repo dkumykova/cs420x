@@ -11,6 +11,17 @@ h3{
     font-weight: lighter;
 }
 
+.links {
+    margin-bottom: 1em;
+}
+
+ul{
+    list-style-type:none;
+}
+li{
+    margin-bottom: .5em;
+}
+
 body{
     text-align: center;
     background-color: rgb(178, 245, 223);
@@ -24,7 +35,7 @@ body{
     background-color: cadetblue;
     grid-area: side1;
     width: 10em;
-    height: 120em;
+    height: 160em;
     opacity: .5;
     /* margin-left: 5%;
     margin-right: 5%; */
@@ -33,7 +44,7 @@ body{
 .sideb2{
     background-color: cadetblue;
     width: 10em;
-    height: 120em;
+    height: 160em;
     grid-area: side2;
     opacity: .5;
     margin-left: 5%;

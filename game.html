@@ -2,6 +2,7 @@
 <html lang='en'>
   <head>
     <style>body{ margin:0; background:black; }</style>
+    <script type="text/javascript" src="build/dat.gui.min.js"></script> 
   </head>
   <body>
     <canvas id='gl'></canvas>
@@ -23,6 +24,10 @@
 
     uniform float time;
     uniform vec2 resolution;
+    uniform float red;
+    uniform float green;
+    uniform float blue;
+    
 
     // simulation texture state, swapped each frame
     uniform sampler2D state;
@@ -35,7 +40,7 @@
     }
 
     void main() {
-    // get sum of all surrounding nine neighbors
+    // get sum of all surrounding nine neighbors.
     int sum = get(-1, -1) +
                 get(-1,  0) +
                 get(-1,  1) +
@@ -48,6 +53,22 @@
     if (sum == 3) {
         // ideal # of neighbors... if cell is living, stay alive, if it is dead, come to life!
         gl_FragColor = vec4( 1. );
+        //gl_FragColor = vec4( red, green, blue, 1. );
+        
+
+        //black   = vec3(0.0);
+        //white   = vec3(1.0);
+        //red     = vec3(0.86,0.22,0.27);
+        //orange  = vec3(0.92,0.49,0.07);
+        //yellow  = vec3(0.91,0.89,0.26);
+        //green   = vec3(0.0,0.71,0.31);
+        //blue    = vec3(0.05,0.35,0.65);
+        //purple  = vec3(0.38,0.09,0.64);
+        //pink    = vec3(.9,0.758,0.798);
+        //lime    = vec3(0.361,0.969,0.282);
+        //teal    = vec3(0.396,0.878,0.878);
+
+
     } else if (sum == 2) {
         // maintain current state
         float current = float( get(0, 0) );
@@ -80,6 +101,13 @@
         textureBack, textureFront,
         dimensions = { width:null, height:null }
 
+        controls = function() {
+             this.red = 1;
+             this.green = 1;
+             this.blue = 1;
+
+        };
+
     window.onload = function() {
       const canvas = document.getElementById( 'gl' )
       gl = canvas.getContext( 'webgl' )
@@ -89,10 +117,20 @@
       // define drawing area of webgl canvas. bottom corner, width / height
       // XXX can't remember why we need the *2!
       gl.viewport( 0,0, gl.drawingBufferWidth, gl.drawingBufferHeight )
+
+     
+        
       
       makeBuffer()
       makeShaders()
       makeTextures()
+
+      ui = new controls();
+        var gui = new dat.GUI();
+        gui.add(ui, 'red', 0, 1);
+        gui.add(ui, 'green', 0, 1);
+        gui.add(ui, 'blue', 0, 1);
+
       setInitialState()
     }
 
@@ -201,6 +239,11 @@
       uSimulationState = gl.getUniformLocation( simulationProgram, 'state' )
 
       position = gl.getAttribLocation( simulationProgram, 'a_position' )
+
+      r = gl.getUniformLocation( simulationProgram, 'red' )
+      g = gl.getUniformLocation( simulationProgram, 'green' )
+      b = gl.getUniformLocation( simulationProgram, 'blue' )
+
       gl.enableVertexAttribArray( simulationProgram )
       gl.vertexAttribPointer( position, 2, gl.FLOAT, false, 0,0 )
     }
