@@ -90,7 +90,7 @@
     uniform vec2 resolution;
 
     void main() {
-      gl_FragColor = vec4( texture2D( uSampler, gl_FragCoord.xy / resolution ).rgb, 1. );
+      gl_FragColor = vec4( texture2D( uSampler, gl_FragCoord.xy/resolution ).rgb, 1. );
     }
   </script>
 
@@ -105,6 +105,7 @@
              this.red = 1;
              this.green = 1;
              this.blue = 1;
+             this.start = function(){setInitialState();}
 
         };
 
@@ -130,8 +131,9 @@
         gui.add(ui, 'red', 0, 1);
         gui.add(ui, 'green', 0, 1);
         gui.add(ui, 'blue', 0, 1);
+        gui.add(ui, 'start');
 
-      setInitialState()
+      //setInitialState()
     }
 
     function poke( x, y, value, texture ) {   

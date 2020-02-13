@@ -1,4 +1,6 @@
-vec2 p = uv();
+
+  vec4 colorful(){ //colorful thingy
+  vec2 p = uv();
   float color = 0.; 
   float frequency = 2.;
   float gain = 1.;
@@ -10,13 +12,15 @@ vec2 p = uv();
   }
   
     
-  gl_FragColor = vec4( p.y, p.x, vec2(color));
+  return gl_FragColor = vec4( p.y, p.x, vec2(color));
 	//gl_FragColor = vec4(black, 1.0);
 
-    //colorful thingy
+  }
 
+    
 
-     vec2 p = uv();
+  vec4 ink(){
+  vec2 p = uv();
   float color = 0.; 
   float frequency = 2.;
   float gain = 1.;
@@ -28,11 +32,14 @@ vec2 p = uv();
   }
   
     
-  gl_FragColor = vec4(color);
+  return gl_FragColor = vec4(color);
 	//gl_FragColor = vec4(black, 1.0);
     //ink
+  }
 
-      vec2 p = uv();
+  
+  vec4 ink2(){
+  vec2 p = uv();
   float color = 0.; 
   float frequency = 2.;
   float gain = 1.;
@@ -44,12 +51,13 @@ vec2 p = uv();
   }
   
     
-  gl_FragColor = vec4(color);
+  return gl_FragColor = vec4(color);
 	//gl_FragColor = vec4(black, 1.0);
 
     //better ink
+  }
 
-    void main () {
+  vec4 rainbowJelly() { //rainbow jellyfish thingy
     
   vec2 p = uv();
   float color = 0.; 
@@ -73,9 +81,9 @@ vec2 p = uv();
 	//gl_FragColor = vec4(black, 1.0);
 }
 
-//rainbow jellyfish thingy
 
-void main () {
+
+vec4 orangeWave () { //orange wave
     
   vec2 p = uv();
   float color = 0.; 
@@ -95,14 +103,14 @@ void main () {
    vec3 t = hsv2rgb(vec3((angle/5.),radius,1.0));
    
     
-  gl_FragColor = vec4(t, 1.);
+  return gl_FragColor = vec4(t, 1.);
 	//gl_FragColor = vec4(black, 1.0);
 }
 
-//orange wave
 
 
-void main () {
+
+vec4 fire() { //pulsating fire thing
     
   vec2 p = uv();
   float color = 0.; 
@@ -131,14 +139,14 @@ void main () {
     t += mod(thickness / p.y, 2.);
     //t+= mod(p.x, p.y);
   }
-  gl_FragColor = vec4(t, 1.);
+  return gl_FragColor = vec4(t, 1.);
 	//gl_FragColor = vec4(black, 1.0);
 }
 
-//pulsating fire thing
 
 
-    
+
+  vec4 blueGold(){
   vec2 p = uv();
   float color = 0.; 
   float frequency = 2.;
@@ -153,11 +161,12 @@ void main () {
  //circle(p.x,p.y, 100., 0.);
     kale(vec2(p), PI);
 
-  gl_FragColor = vec4(vec2(color), rand(.4), .5);
+  return gl_FragColor = vec4(vec2(color), rand(.4), .5);
   //blue gold side to side wave
+  }
 
 
-  void main () {
+  vec4 flamingWater () {
     
   vec2 p = uv();
   //float color = 0.; 
@@ -198,9 +207,9 @@ void main () {
   gl_FragColor = vec4(t, 1.);
   gl_FragColor = vec4(vec2(t), p.y/p.x, 1.); //last
 	//gl_FragColor = vec4(black, 1.0);
-}
 
-//flaming water
+  return gl_FragColor;
+}
 
 gl_FragColor = vec4( 
         gl_FragCoord.x / resolution.x, 
