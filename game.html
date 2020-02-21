@@ -3,6 +3,8 @@
   <head>
     <style>body{ margin:0; background:black; }</style>
     <script type="text/javascript" src="build/dat.gui.min.js"></script> 
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
     <canvas id='gl'></canvas>
@@ -28,6 +30,7 @@
     uniform float green;
     uniform float blue;
     
+    
 
     // simulation texture state, swapped each frame
     uniform sampler2D state;
@@ -35,7 +38,7 @@
     // look up individual cell values 
     int get(int x, int y) {
     return int( 
-        texture2D( state, ( gl_FragCoord.xy + vec2(x, y) ) / resolution ).r 
+        texture2D( state, ( gl_FragCoord.xy + vec2(x, y) ) / (resolution) ).r 
     );
     }
 
@@ -52,8 +55,8 @@
     
     if (sum == 3) {
         // ideal # of neighbors... if cell is living, stay alive, if it is dead, come to life!
-        gl_FragColor = vec4( 1. );
-        //gl_FragColor = vec4( red, green, blue, 1. );
+        gl_FragColor = vec4(1. );
+        
         
 
         //black   = vec3(0.0);
@@ -75,7 +78,7 @@
         gl_FragColor = vec4( vec3( current ), 1.0 );
     } else {
         // over-population or lonliness... cell dies
-        gl_FragColor = vec4( vec3( 0.0 ), 1.0 );
+        gl_FragColor = vec4( vec3( 0. ), 1.0 );
     }
     }
   </script>
@@ -88,9 +91,13 @@
 
     uniform sampler2D uSampler;
     uniform vec2 resolution;
+    uniform float red;
+    uniform float green;
+    uniform float blue;
 
     void main() {
-      gl_FragColor = vec4( texture2D( uSampler, gl_FragCoord.xy/resolution ).rgb, 1. );
+      vec3 g = texture2D( uSampler, gl_FragCoord.xy/(resolution) ).rgb;
+      gl_FragColor = vec4( vec3(1. * g.x, green * g.y, blue * g.z), 1. );
     }
   </script>
 
@@ -98,13 +105,14 @@
     let gl, framebuffer,
         simulationProgram, drawProgram,
         uTime, uSimulationState,
-        textureBack, textureFront,
-        dimensions = { width:null, height:null }
+        textureBack, textureFront, ui, gg, bb, rr;
+    let dimensions = { width:null, height:null },
 
         controls = function() {
-             this.red = 1;
-             this.green = 1;
-             this.blue = 1;
+             this.red = 0.5;
+             this.green = 0.5;
+             this.blue = 0.5;
+            //  this.thing = 1.0;
              this.start = function(){setInitialState();}
 
         };
@@ -119,21 +127,17 @@
       // XXX can't remember why we need the *2!
       gl.viewport( 0,0, gl.drawingBufferWidth, gl.drawingBufferHeight )
 
-     
-        
+      ui = new controls();
+      var gui = new dat.GUI();
+      gui.add(ui, 'red', 0, 1);
+      gui.add(ui, 'green', 0, 1);
+      gui.add(ui, 'blue', 0, 1);
+      // gui.add(ui, 'thing', 0, 1);
+      gui.add(ui, 'start');
       
       makeBuffer()
       makeShaders()
       makeTextures()
-
-      ui = new controls();
-        var gui = new dat.GUI();
-        gui.add(ui, 'red', 0, 1);
-        gui.add(ui, 'green', 0, 1);
-        gui.add(ui, 'blue', 0, 1);
-        gui.add(ui, 'start');
-
-      //setInitialState()
     }
 
     function poke( x, y, value, texture ) {   
@@ -153,9 +157,9 @@
     function setInitialState() {
         for( i = 0; i < dimensions.width; i++ ) {
             for( j = 0; j < dimensions.height; j++ ) {
-            if( Math.random() > .75 ) {
+            if( Math.random() > .8 ) {
                 poke( i, j, 255, textureBack )
-            }
+              }
             }
         }
     }
@@ -204,9 +208,16 @@
 
       gl.linkProgram( drawProgram )
       gl.useProgram( drawProgram )
+
+      
       
       uRes = gl.getUniformLocation( drawProgram, 'resolution' )
+      rr = gl.getUniformLocation( drawProgram, 'red' )
+      gg = gl.getUniformLocation( drawProgram, 'green' )
+      bb = gl.getUniformLocation( drawProgram, 'blue' )
       gl.uniform2f( uRes, gl.drawingBufferWidth, gl.drawingBufferHeight )
+
+     
 
       // get position attribute location in shader
       let position = gl.getAttribLocation( drawProgram, 'a_position' )
@@ -234,6 +245,8 @@
       
       uRes = gl.getUniformLocation( simulationProgram, 'resolution' )
       gl.uniform2f( uRes, gl.drawingBufferWidth, gl.drawingBufferHeight )
+
+      
       
       // find a pointer to the uniform "time" in our fragment shader
       uTime = gl.getUniformLocation( simulationProgram, 'time' )
@@ -242,9 +255,7 @@
 
       position = gl.getAttribLocation( simulationProgram, 'a_position' )
 
-      r = gl.getUniformLocation( simulationProgram, 'red' )
-      g = gl.getUniformLocation( simulationProgram, 'green' )
-      b = gl.getUniformLocation( simulationProgram, 'blue' )
+     
 
       gl.enableVertexAttribArray( simulationProgram )
       gl.vertexAttribPointer( position, 2, gl.FLOAT, false, 0,0 )
@@ -307,11 +318,12 @@
       gl.uniform1i( uSimulationState, 0 )
       // run shader
       gl.drawArrays( gl.TRIANGLES, 0, 6 )
-  
+
       // swap our front and back textures
       let tmp = textureFront
       textureFront = textureBack
       textureBack = tmp
+      
 
       // use the default framebuffer object by passing null
       gl.bindFramebuffer( gl.FRAMEBUFFER, null )
@@ -326,6 +338,11 @@
       // use our drawing (copy) shader
       gl.useProgram( drawProgram )
       // put simulation on screen
+      gl.uniform1f( gg, ui.green)
+      gl.uniform1f( rr, ui.red)
+      gl.uniform1f( bb, ui.blue)
+      // console.log(controls)
+      console.log(`${controls.red} ${controls.green} ${controls.blue} `)
       gl.drawArrays( gl.TRIANGLES, 0, 6 )
     }
   </script>

@@ -9,3 +9,4 @@ toy( shader, (gl, shader) => {
   shader.uniforms.resolution = [ gl.drawingBufferWidth, gl.drawingBufferHeight ]
   shader.uniforms.time = count++
 })
+

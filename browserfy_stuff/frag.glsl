@@ -15,9 +15,9 @@ void main() {
   //float noise = snoise3( vec3(uv.x*100., uv.y*100., time/50.) );
 
   
-  float noise = snoise3( vec3(uv.x*20., uv.y*20., time/250.) );
+  float noise = snoise3( vec3(uv.x*10., uv.y*10., time/250.) );
   float ascii_out = ascii( vec3(noise), uv );
-  gl_FragColor = vec4( .25,ascii_out,ascii_out, 1. );
+  gl_FragColor = vec4(ascii_out,.2,ascii_out, 1. );
 
   
   //gl_FragColor = vec4( noise, noise, noise, 1. );
