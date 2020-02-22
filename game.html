@@ -43,8 +43,8 @@
     }
 
     void main() {
-    // get sum of all surrounding nine neighbors.
-    int sum = get(-1, -1) +
+      // get sum of all surrounding nine neighbors
+      int sum = get(-1, -1) +
                 get(-1,  0) +
                 get(-1,  1) +
                 get( 0, -1) +
@@ -52,12 +52,19 @@
                 get( 1, -1) +
                 get( 1,  0) +
                 get( 1,  1);
-    
-    if (sum == 3) {
+      
+      if (sum == 3) {
         // ideal # of neighbors... if cell is living, stay alive, if it is dead, come to life!
-        gl_FragColor = vec4(1. );
-        
-        
+        gl_FragColor = vec4( 1. );
+      } else if (sum == 2) {
+        // maintain current state
+        float current = float( get(0, 0) );
+        gl_FragColor = vec4( vec3( current ), 1.0 );
+      } else {
+        // over-population or lonliness... cell dies
+        gl_FragColor = vec4( vec3( 0.0 ), 1.0 );
+      }
+    }   
 
         //black   = vec3(0.0);
         //white   = vec3(1.0);
@@ -71,16 +78,6 @@
         //lime    = vec3(0.361,0.969,0.282);
         //teal    = vec3(0.396,0.878,0.878);
 
-
-    } else if (sum == 2) {
-        // maintain current state
-        float current = float( get(0, 0) );
-        gl_FragColor = vec4( vec3( current ), 1.0 );
-    } else {
-        // over-population or lonliness... cell dies
-        gl_FragColor = vec4( vec3( 0. ), 1.0 );
-    }
-    }
   </script>
 
   <!-- render to screen shader -->
@@ -94,10 +91,11 @@
     uniform float red;
     uniform float green;
     uniform float blue;
+    uniform float time;
 
     void main() {
       vec3 g = texture2D( uSampler, gl_FragCoord.xy/(resolution) ).rgb;
-      gl_FragColor = vec4( vec3(1. * g.x, green * g.y, blue * g.z), 1. );
+      gl_FragColor = vec4( vec3(red * g.x, green * g.y, blue * g.z), 1. );
     }
   </script>
 
@@ -112,8 +110,8 @@
              this.red = 0.5;
              this.green = 0.5;
              this.blue = 0.5;
-            //  this.thing = 1.0;
              this.start = function(){setInitialState();}
+             this.reload = function(){location.reload();}
 
         };
 
@@ -132,8 +130,9 @@
       gui.add(ui, 'red', 0, 1);
       gui.add(ui, 'green', 0, 1);
       gui.add(ui, 'blue', 0, 1);
-      // gui.add(ui, 'thing', 0, 1);
       gui.add(ui, 'start');
+      gui.add(ui, 'reload');
+    
       
       makeBuffer()
       makeShaders()
@@ -212,6 +211,7 @@
       
       
       uRes = gl.getUniformLocation( drawProgram, 'resolution' )
+      uTime = gl.getUniformLocation( drawProgram, 'time' )
       rr = gl.getUniformLocation( drawProgram, 'red' )
       gg = gl.getUniformLocation( drawProgram, 'green' )
       bb = gl.getUniformLocation( drawProgram, 'blue' )
