@@ -107,6 +107,36 @@
         <img src="diffusion.jpg" width="600" height="400"/>
 
     </div>
+    <b class="hr"></b>
+
+    <div class="project6">
+        <h2>Assignment 4: Simulation Programming</h2>
+        <div class="links">
+            <ul>
+            <li><a href="https://github.com/dkumykova/langton_sim">Code</a></li>
+            <li><a href="https://dkumykova.github.io/langton_sim">Ant Tool</a></li>
+            </ul>
+        </div>
+            <img src="ants.jpg" width="600" height="400"/>       
+            <h3>For this assignment I chose to recreate Langton's Ants in glsl, and I was aiming just to get the full simulation working
+                to the best of my ability. Eventually I came up with 2 implementations, though neither works entirely correctly. The first
+                implementation is the one currently shown, which uses the shader <a href="https://github.com/dkumykova/langton_sim/blob/master/sim.glsl"> sim.glsl</a>
+                . This implementation has each cell check, on each tick, whether it is currently an ant or whether an ant is about to go into itself,
+                and if so, the cell then assigns itself an ant with a random direction value. The second implementation, which uses the shader <a href="https://github.com/dkumykova/langton_sim/blob/master/sim_2.glsl"> sim_2.glsl</a>
+                , aims for a more correct algorithm where the cell chooses the direction of its new ant based on its own red value (1.0 for white, 0.0 for black). 
+                Both shaders stored the information for each cell as follows: red value signified if the cell was "dead" or "alive", green value
+                signified if the cell had an ant in it or not, and blue signified the direction of the ant. Though the second
+                shader has an algorithm closer to what the actual rules for langton's ants are, I couldn't quite get the simulation to run fully - it just jitters the ants back and forth.
+                The first shader, while a more simpler implementation, does still achieve an ant-like movement across the screen, if a little too uniform in its movements.
+            <h3>
+     <br>
+     <h3>The feedback I received in regards to this tool was that, correct algorithm or not, the tool certainly looks like it's producing a bunch of 
+         ants, and the way they moved made the viewer quite uncomfortable - an unfortunate reaction to the news that the simulation looked like it should.
+         However, my partner also mentioned that it is sometimes more obvious to see that the ants can move very similarly, and clicking to add ants
+         doesn't always add the ants in the correct position.
+     </h3>
+
+    </div>
 
         </div>
         <div class="sideb2"></div>
