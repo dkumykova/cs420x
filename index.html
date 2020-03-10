@@ -135,6 +135,39 @@
          However, my partner also mentioned that it is sometimes more obvious to see that the ants can move very similarly, and clicking to add ants
          doesn't always add the ants in the correct position.
      </h3>
+     <b class="hr"></b>
+
+    </div>
+    <div class="project6">
+        <h2>Final: Integrating Leap Motion with Game of Life</h2>
+        <div class="links">
+            <h3>I had issues uploading this code to Github, so I'm going to explain the relative process of how this works below.
+                
+                <br><br>
+                The leap motion hand setup I adapted from a project I completed in a previous class. To view that project, go <a href="https://github.com/matticoli/birds-and-boids">here</a>.
+                The interaction between hands and the shader I achieved by attaching the Leap Motion ExtendedFingerGesture script
+                to each hand's index finger, which would then trigger the AddNewLifeHand script every time either of the index fingers were "poking" the 
+                shader. This AddNewLifeHand script is an adapted version of the AddNewLife script provided, and includes a function
+                which randomly places new life on the shader on every finger poke. 
+        
+            </h3>
+            
+            <!-- <li><a href="https://dkumykova.github.io/langton_sim">Ant Tool</a></li> -->
+            
+        </div>
+        <iframe width="800" height="600" src="https://www.youtube.com/embed/6SGcBz0OoYE" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>            <h3>My goal for this project was to get some sort of interaction working between the Leap Motion Controller and the 
+                game of life shader present in the example project provided in class. I focused mostly on just getting the motion controllers working,
+                and from there looked into how I could have the user's hands affect the simulation. With the time I had available, I was able to have the 
+                user add new life to the game of life by "poking" at the shader in real time, which turns out to be a pretty fun feature. If I had more
+                time to become more familiar with Unity's shader language I would have liked to sync things such as the simulation color and speed to 
+                the user's hand motions as well - unfortunately this was my first time ever looking at Unity Cg, and I found it difficult to parse.
+            <h3>
+     <br>
+     <h3>The feedback I received for this project was that the person found it fun to poke at the 
+         simulation and see changes occur, but they wished for more ways to interact with the shader. In general,
+         they said they spent about half the time just playing around with their hands and seeing how sensitive
+         the controller was. They commented, however, that the background and general aesthetics of the project were nice.
+     </h3>
 
     </div>
 
